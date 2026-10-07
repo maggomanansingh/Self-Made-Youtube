@@ -5,16 +5,17 @@
   "type": "module",
   "main": "index.js",
   "scripts": {
-    "dev":"nodemon src/index.js",
+    "dev": "nodemon src/index.js",
     "start": "node src/index.js"
   },
   "keywords": [
     "javascript",
     "backend"
   ],
-  "license":"ISC",
+  "license": "ISC",
   "author": "Manan Singh Maggo",
   "devDependencies": {
-    "nodemon": "^3.1.14"
+    "nodemon": "^3.1.14",
+    "prettier": "^3.9.9"
   }
 }
