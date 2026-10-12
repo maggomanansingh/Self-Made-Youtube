@@ -21,8 +21,6 @@ app.use(express.urlencoded({
 
 app.use(express.static("public"))
 
-
-
 app.get("/api",(req,res)=>{
     res.json({
         message:"Backend is live"
