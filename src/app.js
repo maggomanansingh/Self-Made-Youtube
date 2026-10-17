@@ -18,13 +18,21 @@ app.use(express.json({
 app.use(express.urlencoded({
     extended: true
 }))
-
 app.use(express.static("public"))
+app.use(cookieParser())
 
+// basic /api endpoint
 app.get("/api",(req,res)=>{
     res.json({
         message:"Backend is live"
     })
 })
 
-export default app
+// routesn import
+import userRouter from "./routes/user.routes.js"
+
+
+// routes declaration
+app.use("/api/v1/users",userRouter);
+
+export {app}
