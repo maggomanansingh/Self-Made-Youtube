@@ -41,11 +41,10 @@ const userSchema = new mongoose.Schema({
 
 // hashhing the password only when password field is updated
 userSchema.pre("save", async function (next){
-    if(!this.isModified("password")) return next();
+    if(!this.isModified("password")) return next;
 
     this.password = await bcrypt.hash(this.password,12);
-
-    next();
+    next;
 })
 
 // comparing password from user and stored password hash
