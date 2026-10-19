@@ -22,7 +22,7 @@ app.use(express.static("public"))
 app.use(cookieParser())
 
 // basic /api endpoint
-app.get("/api",(req,res)=>{
+app.get("/api/v1",(req,res)=>{
     res.json({
         message:"Backend is live"
     })

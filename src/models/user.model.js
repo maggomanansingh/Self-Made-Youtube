@@ -35,7 +35,8 @@ const userSchema = new mongoose.Schema({
         required:[true,"Password is required"]
     },
     refreshToken:{
-        type: String
+        type: String,
+        default: ""
     }
 },{timestamps:true})
 
@@ -55,14 +56,18 @@ userSchema.methods.isPasswordCorrect = async function(password){
 // Access token generation 
 // short lived
 userSchema.methods.generateAccessToken = function(){
-    return jwt.sign({
-        _id: this._id,
-        username: this.username,
-        fullname: this.fullname
-
-    }, process.env.ACCESS_TOKEN_SECRET,{
-        expiresIn:process.env.ACCESS_TOKEN_EXPIRY
-    })
+    try {
+        return jwt.sign({
+            _id: this._id,
+            username: this.username,
+            fullname: this.fullname
+    
+        }, process.env.ACCESS_TOKEN_SECRET,{
+            expiresIn:process.env.ACCESS_TOKEN_EXPIRY
+        })        
+    } catch (error) {
+        throw new ApiError("500","error in generating access token")
+    }
 }
 
 // refresh token genration

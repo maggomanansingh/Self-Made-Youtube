@@ -14,9 +14,13 @@ import { ApiResponse } from "../utils/ApiResponse.js";
 const generateAccessAndRefreshTokens = async(userId)=>{
     try {
         const user = await User.findOne(userId)
-
-        const accessToken = user.generateAccessToken()
-        const refreshToken = user.generateRefreshToken()
+        console.log(user);
+        
+        
+        const accessToken = await user.generateAccessToken()
+        // console.log(accessToken);
+        const refreshToken = await user.generateRefreshToken()
+        // console.log(refreshToken);
 
         user.refreshToken = refreshToken
         await user.save({validateBeforeSave: false})
@@ -111,7 +115,7 @@ const loginUser = asyncHandler(async (req,res)=>{
     // send cookies 
 
     const { username , email , password } = req.body;
-    if(!username  || !email ){throw new ApiError(400,"Empty fields not allowed")}
+    if(!username  && !email ){throw new ApiError(400,"Empty fields not allowed")}
 
     // finding user on basis of username or email
     const user = await User.findOne({
@@ -124,6 +128,9 @@ const loginUser = asyncHandler(async (req,res)=>{
     if(!isPasswordValid) {throw new ApiError(401, "Passowrd not correct")}
 
     const {accessToken , refreshToken} = await generateAccessAndRefreshTokens(user._id)
+    console.log(accessToken);
+    console.log(refreshToken);
+    
 
     const loggedInUser = await User.findById(user._id).select(
         "-password -refreshToken"
@@ -131,7 +138,7 @@ const loginUser = asyncHandler(async (req,res)=>{
     
     const options = {
         httpOnly: true,
-        secure: true
+        secure: false // set it back to true when deployment false helps in entertaining the http requests
     }
 
     return res
@@ -146,10 +153,12 @@ const loginUser = asyncHandler(async (req,res)=>{
 })
 
 const logoutUser = asyncHandler( async (req,res)=>{
+    // userId from auth middleware -> req.user._id
+    // 
     const userId = req.user._id
-    await User.findByIdAndUpdate(userid,{
+    await User.findByIdAndUpdate(userId,{
         $set : {
-            refreshtoken: undefined
+            refreshToken: undefined
         }
     },
     {
@@ -158,11 +167,11 @@ const logoutUser = asyncHandler( async (req,res)=>{
 
     const options = {
         httpOnly: true,
-        secure: true
+        secure: false // set it back to true when deployment false helps in entertaining the http requests
     }
 
     return res
-    .satus(200)
+    .status(200)
     .clearCookie("accessToken",options)
     .clearCookie("refreshToken",options)
     .json( new ApiResponse(200,{},"User logged out succesfully"))
