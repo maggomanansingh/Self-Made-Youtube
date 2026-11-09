@@ -8,7 +8,7 @@ cloudinary.config({
 });
 
 // Log the configuration
-console.log(cloudinary.config());
+// console.log(cloudinary.config());
 
 const uploadOnCloudinary = async (localFilePath)=>{
     const options = {
@@ -22,9 +22,9 @@ const uploadOnCloudinary = async (localFilePath)=>{
         }
         
         const result = await cloudinary.uploader.upload(localFilePath, options);
-        fs.unlinkSync(localFilePath)
+        fs.unlinkSync(localFilePath) // fs.unlinkSync(path) method is a function used to synchronously delete a file from file system.
         // File has been uploaded successfully
-        // console.log("file upload successfull\n");
+        console.log("file upload successfull\n");
         // console.log(result);
         return result;        
     } catch (errors) {
