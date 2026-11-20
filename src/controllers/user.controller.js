@@ -15,6 +15,7 @@ import { Subscription } from "../models/subscriptions.model.js";
 import { uploadOnCloudinary } from "../utils/cloudinary.js";
 
 import jwt from "jsonwebtoken"
+import mongoose from "mongoose";
 
 // method to generate the access and refresh tokens
 const generateAccessAndRefreshTokens = async(userId)=>{
@@ -440,7 +441,59 @@ const getUserChannelProfile = asyncHandler(async (req,res)=>{
     }
 })
 
+// get user watch history
+const getWatchHistory = asyncHandler(async (req,res)=>{
+    try {
+        const user  = await user.aggregate([
+            {
+                $match:{
+                    _id: new mongoose.Types.ObjectId(req.user._id)
+                }
+            },
+            {
+                $lookup:{
+                    from: "videos",
+                    localField:"watchHistory",
+                    foreignField:"_id",
+                    as:"watchHistory",
+                    // writing sub-pipeline because in watch history array we are getting video model which includes owner-> linked with user again 
+                    // So the nested pipeline fetches details of the owner from user model
+                    pipeline: [
+                        {
+                            $lookup:{
+                                from: "users",
+                                localField:"owner",
+                                foreignField:"_id",
+                                as:"owner",
+                                // again we are adding 1 more sub-pipeline so that the whole document should not be returned in owner only selected fields should returned
+                                pipeline: [
+                                    {
+                                        $project:{
+                                            fullname:1,
+                                            username:1,
+                                            avatar:1
+                                        }
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            $addFields:{
+                                owner:{
+                                    $first:"$owner"
+                                }
+                            }
+                        }
+                    ]
+                }
+            }
+        ])
 
+        return res.status(200).json( new ApiResponse(200,user[0].watchHistory,"watchHistory fetched sucessfully"))
+    } catch (error) {
+        throw new ApiError(500,"Unable to fetch data")
+    }
+})
 
 export {
     registerUser,
@@ -452,6 +505,6 @@ export {
     updateAccountDetails,
     updateUserAvatar,
     updateUserCoverImage,
-    getUserChannelProfile
-
+    getUserChannelProfile,
+    getWatchHistory
 }
