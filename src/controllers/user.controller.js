@@ -4,11 +4,15 @@ import {asyncHandler} from "../utils/asyncHandler.js";
 // importing the wraper for handling api error part of code
 import { ApiError } from "../utils/ApiError.js";
 
-// importing 
-import { User } from "../models/user.model.js";
-
-import { uploadOnCloudinary } from "../utils/cloudinary.js";
+// importing the wraper for handling api response part of code
 import { ApiResponse } from "../utils/ApiResponse.js";
+
+// importing data models
+import { User } from "../models/user.model.js";
+import { Subscription } from "../models/subscriptions.model.js";
+
+// importing utilities
+import { uploadOnCloudinary } from "../utils/cloudinary.js";
 
 import jwt from "jsonwebtoken"
 
@@ -241,12 +245,12 @@ const changeCurrentUserPassword =asyncHandler(async (req,res)=>{
 
 })
 
-// geting details of current user
+// getting details of current user
 const getCurrentUser = asyncHandler( async (req,res)=>{
     try{
         return res
         .status(200)
-        .json(200, req.user, "Current user fetched successfully")
+        .json(new ApiResponse(200, req.user, "Current user fetched successfully"))
         
     }catch(err){
         throw new ApiError(500,"Unable to fetch current user")
@@ -291,10 +295,13 @@ const updateAccountDetails= asyncHandler(async (req,res)=>{ //Only for text fiel
 const updateUserAvatar = asyncHandler(async (req,res)=>{ 
     try{
         const avatarLocalPath = req.file?.path
+        console.log(avatarLocalPath);
+        
         if(!avatarLocalPath){ throw new ApiError(400,"local Avatar path is required")}
 
         const avatar = await uploadOnCloudinary(avatarLocalPath)
-
+        console.log(avatar);
+        
         if (!avatar.url) {
             throw new ApiError(400,"Avatar is required")
         }
@@ -353,6 +360,88 @@ const updateUserCoverImage = asyncHandler(async (req,res)=>{
     }
 })
 
+// get user chanel profile
+const getUserChannelProfile = asyncHandler(async (req,res)=>{
+    try {
+        const {username} = req.params
+        if (!username?.trim()) { throw new ApiError(400,"username is missing") }
+
+        const channel = await User.aggregate([ // Writing aggregation pipeline for getting some details of user
+            // STAGE 1: finding the user from DB
+            {
+                $match:{
+                    username: username?.toLowerCase()
+                }
+            },
+            // STAGE 2: finding the subscribers to the user channel
+            {
+                $lookup:{
+                    from:"subscriptions",
+                    localField:"_id",
+                    foreignField:"channel",
+                    as:"subscribers"
+                }
+            },
+            // STAGE 3: finding the channels suscribed by user
+            {
+                $lookup:{
+                    from:"subscriptions",
+                    localField:"_id",
+                    foreignField:"subscriber",
+                    as:"subscribedTo"
+                }
+            },
+            // STAGE 4: Adding fields like subsCount etc..
+            {
+                $addFields:{
+                    subscribersCount:{
+                        $size:"$subscribers"
+                    },
+                    channelsSubscribedToCount:{
+                        $size:"$subscribedTo"
+                    },
+                    isSubscribed:{
+                        $cond:{
+                            if:{
+                                $in: [req.user?._id, "$subscribers.subscriber"]
+                            },
+                            then:true,
+                            else:false
+                        }
+                    }
+                }
+            },
+            // STAGE 5: mentioning the fields which should be passed in object
+            {
+                $project:{
+                    fullname:1,
+                    username:1,
+                    subscribersCount:1,
+                    channelsSubscribedToCount:1,
+                    isSubscribed:1,
+                    avatar:1,
+                    coverImage:1,
+
+                }
+            }
+        ])
+        
+        if (!channel?.trim()) { throw new ApiError(404,"channel does not exist") }
+        console.log(channel);
+        
+        return res
+        .status(200)
+        .json(
+            new ApiResponse(200,channel,"User Channel fetched successfully")
+        )
+        
+    } catch (error) {
+        throw new ApiError(500,"Unable to fetch data")
+    }
+})
+
+
+
 export {
     registerUser,
     loginUser,
@@ -363,5 +452,6 @@ export {
     updateAccountDetails,
     updateUserAvatar,
     updateUserCoverImage,
+    getUserChannelProfile
 
 }

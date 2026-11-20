@@ -9,6 +9,6 @@ const subscriptionSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId, // channel to be subscribed
         ref:"User"
     }
-},{timestampstrue})
+},{timestamps:true})
 
 export const Subscription = mongoose.model("Subscription", subscriptionSchema)
