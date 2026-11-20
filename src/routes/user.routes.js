@@ -8,6 +8,8 @@ import { registerUser,
     updateAccountDetails,
     updateUserAvatar,
     updateUserCoverImage,
+    getUserChannelProfile,
+    getWatchHistory
 } from "../controllers/user.controller.js";
 
 import { upload } from "../middlewares/multer.middleware.js";
@@ -47,10 +49,16 @@ router.route("/get-user").get(verifyJWT,getCurrentUser)
 // update user details
 router.route("/update-user").patch(verifyJWT,updateAccountDetails)
 
-// update user details
-router.route("/update-avatar").patch(verifyJWT,updateUserAvatar)
+// update avatar details
+router.route("/update-avatar").patch(verifyJWT,upload.single("avatar"), updateUserAvatar)
 
-// update user details
-router.route("/update-coverimage").patch(verifyJWT,updateUserCoverImage)
+// update coverImage details
+router.route("/update-coverimage").patch(verifyJWT,upload.single("coverImage"), updateUserCoverImage)
+
+// get user Channel profile
+router.route("/c/:username").get(verifyJWT,getUserChannelProfile)
+
+// get user Watch
+router.route("/history").get(verifyJWT,getWatchHistory)
 
 export default router
