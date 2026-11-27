@@ -6,12 +6,12 @@ connectDB()
 .then(()=>{
     app.listen(process.env.PORT || 8000,()=>{
         console.log(`
-        ============================
-        BACKEND IS LIVE
-        ============================
-        PORT:${process.env.PORT}
-        server : http://localhost:${process.env.PORT}
-        ============================`
+============================
+BACKEND IS LIVE
+============================
+PORT:${process.env.PORT}
+server : http://localhost:${process.env.PORT}
+============================`
     )})
 })
 .catch((err)=>{

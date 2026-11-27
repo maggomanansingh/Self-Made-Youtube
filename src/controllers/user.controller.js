@@ -9,7 +9,6 @@ import { ApiResponse } from "../utils/ApiResponse.js";
 
 // importing data models
 import { User } from "../models/user.model.js";
-import { Subscription } from "../models/subscriptions.model.js";
 
 // importing utilities
 import { uploadOnCloudinary } from "../utils/cloudinary.js";
@@ -166,8 +165,8 @@ const logoutUser = asyncHandler( async (req,res)=>{
 
     const userId = req.user._id
     await User.findByIdAndUpdate(userId,{
-        $set : {
-            refreshToken: undefined
+        $unset : {
+            refreshToken: 1 // this removes the field from document
         }
     },
     {
